@@ -7,7 +7,7 @@ CONTRACT_NAME_TO_MOCK = {
     "Depositor": project.Depositor
 }
 
-def get_account(index-None, id=None):
+def get_account(index=None, id=None):
     if index:
         return accounts[index]
     if id:
@@ -20,7 +20,7 @@ def get_account(index-None, id=None):
 
 def main():
     pass
-
+    
 def deploy_mocks():
     """
     Deploys mock contracts to a local network. Should take care to make sure you
