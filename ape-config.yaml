@@ -1,0 +1,7 @@
+name: depositor
+plugins:
+  - name: vyper
+    version: 0.3.3
+deployments:
+  ethereum:
+    
