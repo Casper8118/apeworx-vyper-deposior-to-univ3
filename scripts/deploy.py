@@ -1,15 +1,8 @@
-from ape import project, accounts, chain, config, networks
-from scripts.helper_functions import get_account
+from ape import networks, accounts, project
+with networks.ethereum.mainnet.use_provider("infura"):
 
-
-def deploy():
-    account = get_account()
-    depositor = project.Depositor.deploy(
-        sender = account
-    )
-    print(f"Depositor deployed to {depositor.address}")
-    return depositor
-
-
-def main():
-    deploy_keepers_consumer()
+    def main():
+        account = accounts.load("default")
+        print(account.balance())
+        contract = account.deploy(project.Depositor)
+        contract.viewThis()
