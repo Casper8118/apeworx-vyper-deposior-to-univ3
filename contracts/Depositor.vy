@@ -80,9 +80,9 @@ def say_hello() -> String[10]:
 # Deposit with ETH
 @payable
 @external
-def deposit(tickLower: int24, tickUpper: int24) -> MintReturnParams:
+def deposit(tickLower: int24, tickUpper: int24):
 
-    assert msg.value > 0
+    assert msg.value > 0, "value can't be zero"
 
     deadline: uint256 = block.timestamp + 15
 
@@ -90,34 +90,34 @@ def deposit(tickLower: int24, tickUpper: int24) -> MintReturnParams:
     amount0ToMint: uint256 = ISwapRouter(SwapRouterAddress).exactInputSingle(ExactInputSingleParams({tokenIn: WETH, tokenOut: USDC, fee: 3000, recipient: msg.sender, deadline: deadline, amountIn: msg.value / 2, amountOutMinimum: 0, sqrtPriceLimitX96: 0}), value = msg.value / 2)
     amount1ToMint: uint256 = ISwapRouter(SwapRouterAddress).exactInputSingle(ExactInputSingleParams({tokenIn: WETH, tokenOut: WETH, fee: 3000, recipient: msg.sender, deadline: deadline, amountIn: msg.value / 2, amountOutMinimum: 0, sqrtPriceLimitX96: 0}), value = msg.value / 2)
 
-    # Approve NonfungiblePositionManger to transfer swapped USDC and WETH
-    ERC20(USDC).approve(NonfungiblePositionManagerAddress, amount0ToMint)
-    ERC20(WETH).approve(NonfungiblePositionManagerAddress, amount1ToMint)
+    # # Approve NonfungiblePositionManger to transfer swapped USDC and WETH
+    # ERC20(USDC).approve(NonfungiblePositionManagerAddress, amount0ToMint)
+    # ERC20(WETH).approve(NonfungiblePositionManagerAddress, amount1ToMint)
 
-    # Set mint arguments
-    params: MintParams = MintParams({token0: USDC, token1: WETH, fee: poolFee, tickLower: tickLower, tickUpper: tickUpper, amount0Desired: amount0ToMint, amount1Desired: amount1ToMint, amount0Min: 0, amount1Min: 0, recipient: msg.sender, deadline: block.timestamp})
-    # Deposit to USDC-WETH pool with poolFee tier, etc.
-    result: MintReturnParams = INonfungiblePositionManager(NonfungiblePositionManagerAddress).mint(params)
+    # # Set mint arguments
+    # params: MintParams = MintParams({token0: USDC, token1: WETH, fee: poolFee, tickLower: tickLower, tickUpper: tickUpper, amount0Desired: amount0ToMint, amount1Desired: amount1ToMint, amount0Min: 0, amount1Min: 0, recipient: msg.sender, deadline: block.timestamp})
+    # # Deposit to USDC-WETH pool with poolFee tier, etc.
+    # result: MintReturnParams = INonfungiblePositionManager(NonfungiblePositionManagerAddress).mint(params)
 
-    # Log deposit
-    log Deposit(msg.sender, result.liquidity, result.amount0, result.amount1)
+    # # Log deposit
+    # log Deposit(msg.sender, result.liquidity, result.amount0, result.amount1)
 
-    # Refund rest USDC to user if it remains
-    if result.amount0 < amount0ToMint:
-        # Remove allowance of NonfungiblePositionManger from this contract
-        ERC20(USDC).approve(NonfungiblePositionManagerAddress, 0)
-        # Rest amount of USDC after deposit
-        refund0: uint256 = amount0ToMint - result.amount0
-        # Refund USDC to depositor
-        ERC20(USDC).transfer(msg.sender, refund0)
+    # # Refund rest USDC to user if it remains
+    # if result.amount0 < amount0ToMint:
+    #     # Remove allowance of NonfungiblePositionManger from this contract
+    #     ERC20(USDC).approve(NonfungiblePositionManagerAddress, 0)
+    #     # Rest amount of USDC after deposit
+    #     refund0: uint256 = amount0ToMint - result.amount0
+    #     # Refund USDC to depositor
+    #     ERC20(USDC).transfer(msg.sender, refund0)
     
-    # Refund rest WETH to user if it remains
-    if result.amount0 < amount0ToMint:
-        # Remove allowance of NonfungiblePositionManger from this contract
-        ERC20(WETH).approve(NonfungiblePositionManagerAddress, 0)
-        # Rest amount of USDC after deposit
-        refund1: uint256 = amount1ToMint - result.amount1
-        # Refund USDC to depositor
-        ERC20(WETH).transfer(msg.sender, refund1)
+    # # Refund rest WETH to user if it remains
+    # if result.amount0 < amount0ToMint:
+    #     # Remove allowance of NonfungiblePositionManger from this contract
+    #     ERC20(WETH).approve(NonfungiblePositionManagerAddress, 0)
+    #     # Rest amount of USDC after deposit
+    #     refund1: uint256 = amount1ToMint - result.amount1
+    #     # Refund USDC to depositor
+    #     ERC20(WETH).transfer(msg.sender, refund1)
 
-    return result
+    # return result
