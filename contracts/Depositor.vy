@@ -29,7 +29,7 @@ poolFee: constant(uint256) = 3000
 struct MintParams:
     token0: address
     token1: address
-    fee: uint256
+    fee: uint24
     tickLower: int24
     tickUpper: int24
     amount0Desired: uint256
@@ -38,13 +38,6 @@ struct MintParams:
     amount1Min: uint256
     recipient: address
     deadline: uint256
-
-# Return arguments of mint function of NonfungiblePositionManager
-struct MintReturnParams:
-    tokenId: uint256
-    liquidity: uint128
-    amount0: uint256
-    amount1: uint256
 
 # Arguments for SwapRouter to swap tokens
 struct ExactInputSingleParams:
@@ -59,15 +52,31 @@ struct ExactInputSingleParams:
 
 # Interface of NonfungiblePositionManager
 interface INonfungiblePositionManager:
-    def mint(params: MintParams) -> MintReturnParams: nonpayable
+    def mint(params: MintParams) -> (uint256, uint128, uint256, uint256): payable
 
 interface ISwapRouter:
     def exactInputSingle(params: ExactInputSingleParams) -> uint256: payable
+
+# Interface of WETH
+interface IWETH:
+    def deposit(): payable
 
 # Event for logging that user has deposited
 event Deposit:
     depositor: indexed(address)
     liquidity: uint128
+    amount0: uint256
+    amount1: uint256
+
+# Event for Swapping
+event Swap:
+    depositor: indexed(address)
+    amount: uint256
+    describe: String[100]
+
+# Event to show approve
+event TokenApproved:
+    target: address
     amount0: uint256
     amount1: uint256
 
@@ -86,20 +95,59 @@ def deposit(tickLower: int24, tickUpper: int24):
 
     deadline: uint256 = block.timestamp + 15
 
-    # Divide and Swap ETH to USDC and WETH respectively
-    amount0ToMint: uint256 = ISwapRouter(SwapRouterAddress).exactInputSingle(ExactInputSingleParams({tokenIn: WETH, tokenOut: USDC, fee: 3000, recipient: msg.sender, deadline: deadline, amountIn: msg.value / 2, amountOutMinimum: 0, sqrtPriceLimitX96: 0}), value = msg.value / 2)
-    amount1ToMint: uint256 = ISwapRouter(SwapRouterAddress).exactInputSingle(ExactInputSingleParams({tokenIn: WETH, tokenOut: WETH, fee: 3000, recipient: msg.sender, deadline: deadline, amountIn: msg.value / 2, amountOutMinimum: 0, sqrtPriceLimitX96: 0}), value = msg.value / 2)
+    # Swap half amount to USDC
+    amount0ToMint: uint256 = ISwapRouter(SwapRouterAddress).exactInputSingle(
+        ExactInputSingleParams({
+            tokenIn: WETH, 
+            tokenOut: USDC, 
+            fee: 3000, 
+            recipient: self, 
+            deadline: deadline, 
+            amountIn: msg.value / 2, 
+            amountOutMinimum: 0, 
+            sqrtPriceLimitX96: 0
+        }), 
+        value = msg.value / 2)
 
-    # # Approve NonfungiblePositionManger to transfer swapped USDC and WETH
-    # ERC20(USDC).approve(NonfungiblePositionManagerAddress, amount0ToMint)
-    # ERC20(WETH).approve(NonfungiblePositionManagerAddress, amount1ToMint)
+    log Swap(self, ERC20(USDC).balanceOf(self), "USDC success")
+    
+    amount1ToMint: uint256 = msg.value / 2
 
-    # # Set mint arguments
-    # params: MintParams = MintParams({token0: USDC, token1: WETH, fee: poolFee, tickLower: tickLower, tickUpper: tickUpper, amount0Desired: amount0ToMint, amount1Desired: amount1ToMint, amount0Min: 0, amount1Min: 0, recipient: msg.sender, deadline: block.timestamp})
-    # # Deposit to USDC-WETH pool with poolFee tier, etc.
-    # result: MintReturnParams = INonfungiblePositionManager(NonfungiblePositionManagerAddress).mint(params)
+    # Swapt half amount to WETH
+    IWETH(WETH).deposit(value = amount1ToMint)
 
-    # # Log deposit
+    log Swap(self, ERC20(WETH).balanceOf(self), "WETH success")
+
+    # Approve NonfungiblePositionManger to transfer swapped USDC and WETH
+    ERC20(USDC).approve(NonfungiblePositionManagerAddress, amount0ToMint)
+    ERC20(WETH).approve(NonfungiblePositionManagerAddress, amount1ToMint)
+
+    #Check allowance
+    log TokenApproved(
+        NonfungiblePositionManagerAddress, 
+        ERC20(USDC).allowance(self, NonfungiblePositionManagerAddress), 
+        ERC20(WETH).allowance(self, NonfungiblePositionManagerAddress)
+    )
+
+    # Set mint arguments
+    params: MintParams = MintParams({
+            token0: USDC, 
+            token1: WETH, 
+            fee: 3000, 
+            tickLower: 0, 
+            tickUpper: 10000, 
+            amount0Desired: amount0ToMint, 
+            amount1Desired: amount1ToMint, 
+            amount0Min: 0, 
+            amount1Min: 0, 
+            recipient: msg.sender, 
+            deadline: block.timestamp + 100
+        })
+
+    # Deposit to USDC-WETH pool with poolFee tier, etc.
+    INonfungiblePositionManager(NonfungiblePositionManagerAddress).mint(params)
+    
+    # Log deposit
     # log Deposit(msg.sender, result.liquidity, result.amount0, result.amount1)
 
     # # Refund rest USDC to user if it remains
