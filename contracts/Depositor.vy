@@ -2,9 +2,20 @@
 
 from vyper.interfaces import ERC20
 
-# Token address in network
-USDC: constant(address) = 0x5FfbaC75EFc9547FBc822166feD19B05Cd5890bb
-WETH: constant(address) = 0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6
+# # In goerli
+# # Token address
+# USDC: constant(address) = 0x5FfbaC75EFc9547FBc822166feD19B05Cd5890bb
+# WETH: constant(address) = 0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6
+
+# # Address of NonfungiblePositionManager
+# NonfungiblePositionManagerAddress: constant(address) = 0xC36442b4a4522E871399CD717aBDD847Ab11FE88
+# # Address of Uniswap V3 SwapRouter
+# SwapRouterAddress: constant(address) = 0xE592427A0AEce92De3Edee1F18E0157C05861564
+
+# In mainnet
+# Token address
+USDC: constant(address) = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
+WETH: constant(address) = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
 
 # Address of NonfungiblePositionManager
 NonfungiblePositionManagerAddress: constant(address) = 0xC36442b4a4522E871399CD717aBDD847Ab11FE88
@@ -59,6 +70,12 @@ event Deposit:
     liquidity: uint128
     amount0: uint256
     amount1: uint256
+
+# For testing
+@view
+@external
+def say_hello() -> String[10]:
+    return "Hello"
 
 # Deposit with ETH
 @payable

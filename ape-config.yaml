@@ -1,4 +1,14 @@
 name: Depositor
+plugins:
+  - name: vyper
+  - name: foundry
+  - name: infura
+# default_ecosystem: ethereum
+# ethereum:
+#   mainnet-fork:
+#    default_provider: foundry
+#   local:
+#     default_provider: foundry
 hardhat:
   port: 8555
   request_timeout: 20  # Defaults to 30
@@ -7,3 +17,12 @@ hardhat:
     ethereum:
       mainnet:
         upstream_provider: infura
+# foundry:
+#   port: 8555
+#   fork:
+#     ethereum:
+#       mainnet:
+#         upstream_provider: infura
+test:
+  mnemonic: test test test test test test test test test test test junk
+  number_of_accounts: 5

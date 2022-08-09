@@ -1,8 +1,9 @@
 from ape import networks, accounts, project
-with networks.ethereum.mainnet.use_provider("infura"):
+from ape.logging import logger
 
-    def main():
-        account = accounts.load("default")
-        print(account.balance())
-        contract = account.deploy(project.Depositor)
-        contract.viewThis()
+def main():
+    logger.info("This is a log message, {}", accounts)
+    account = accounts.load("default")
+    print(account.balance)
+    contract = account.deploy(project.Depositor)
+    contract.viewThis()
